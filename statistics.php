@@ -31,21 +31,9 @@ create_html_statistics_upperbanner();
 create_html_statistics_count_panel(get_individual_statistics_count());
 
 if(isset($_POST["time_statistics"])) {
-    
-    $bdayarray = array();
-    $ddayarray = array();
-    
-    for($year = 1700;$year<=date("Y");$year++) {
-        
-        array_push($bdayarray,get_count_by_year("bday",$year));
-        array_push($ddayarray,get_count_by_year("dday",$year));
+       
 
-        //LOGTEXT("Vuonna $year syntyneitä oli : ".get_count_by_year("bday",$year)." kpl");
-        //LOGTEXT("Vuonna $year kuolleita oli : ".get_count_by_year("dday",$year)." kpl");
-        //LOGTEXT("------------------------------------------------------------------------------------------------------");
-    }
-
-    create_html_statistics_panel($bdayarray,$ddayarray);
+    create_html_statistics_panel();
 }
 
 create_html_end();

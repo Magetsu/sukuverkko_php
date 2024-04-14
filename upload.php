@@ -4,6 +4,7 @@ header("Content-Type: text/html; charset=utf-8");
 ini_set("error_reporting", E_ALL | E_STRICT);
 ini_set("display_errors", 1);
 
+require_once("constants.php");
 require_once("sql.php");
 require_once("html.php");
 require_once("logging.php");
@@ -42,8 +43,15 @@ if(isset($_POST["upload_gedcom_data"])) {
         LOGTEXT("Error : " . $_FILES['gedcom_data']['error']);
     }
 
+    // Poistetaan vanhat taulukot koska otetaan uudet tiedot taulukoihin
+    create_tables(FAMILIES);
+    create_tables(INDIVIDUALS);
+    create_tables(SOURCES);
+    create_tables(STATISTICS);
+    
     // Parsitaan gedcom-tiedosto
     parse_file($gedcom_data);
+    create_statistics();
     
     LOGTEXT("<p>Palaa <a href=\"main.php\">pääsivulle</a>.</p>");
     

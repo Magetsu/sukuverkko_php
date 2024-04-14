@@ -1,5 +1,7 @@
 <?php
 
+require_once("convert_day.php");
+
 //
 // Tulostaa HTML-sivun alkuosan valitun otsikon kanssa.
 //
@@ -65,7 +67,7 @@ function create_html_main_upperbanner() {
     
     if(isset($_SESSION["user_id"])) {
         
-        // echo " <input type=\"submit\" name=\"erase_tables\" value=\"Poista tietokanta\">\n";
+        //echo " <input type=\"submit\" name=\"erase_tables\" value=\"Poista tietokanta\">\n";
         echo " <input type=\"submit\" name=\"upload_gedcom\" value=\"Tuo gedcom\">\n";
     }
     
@@ -119,6 +121,17 @@ function create_html_upload() {
     echo "  <button class=\"button\" type=\"button\" onclick=\"window.location.href='main.php'\">Palaa takaisin</button>\n";
     echo " </div>\n";
     echo "</form>\n";   
+}
+
+//
+// Tulostaa otsikkopaneelin
+//
+function create_html_individual_search_header_banner() {
+    
+    echo "Haku toimii päivämäärien osalta siten että voi joko hakea tarkalla päivämääräällä tai vuoden tarkkuudella.<br>\n";
+    echo "Lisättäessa - merkki eteen haetaan kaikki tiedot ennen päivämäärää (-1972 tai -5.5.1972).<br>\n";
+    echo "Lisättäessa - merkki taakse haetaan kaikki tiedot päivämäärän jälkeen (1972- tai 5.5.1972-).<br>\n";
+    echo "Lisättäessa - merkki päivämäärien väliin haetaan kaikki tiedot päivämäärien välillä (1972-1973 tai 5.5.1972-5.5.1973).<br>\n";
 }
 
 //
@@ -251,14 +264,14 @@ function create_html_individual_data_panel($pages, $pagenumber, $array) {
         echo "          <td>".$individual['givn']."</td>\n";
         echo "          <td>".$individual['surn']."</td>\n";
         echo "          <td>".$individual['occu']."</td>\n";
-        echo "          <td>".$individual['bday']."</td>\n\n";
+        echo "          <td>".modify_record_date_to_day($individual['bday'])."</td>\n\n";
         echo "          <td>".$individual['bplace']."</td>\n";
-        echo "          <td>".$individual['dday']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($individual['dday'])."</td>\n";
         echo "          <td>".$individual['dplace']."</td>\n";
         echo "          <td>".$individual['dcause']."</td>\n";
-        echo "          <td>".$individual['buday']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($individual['buday'])."</td>\n";
         echo "          <td>".$individual['buplace']."</td>\n";
-        echo "          <td>".$individual['chrday']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($individual['chrday'])."</td>\n";
         echo "          <td>".$individual['chrplace']."</td>\n";
         echo "          <td>".$individual['move']."</td>\n";
         echo "          <td>".$individual['source']."</td>\n";
@@ -301,7 +314,7 @@ function create_html_statistics_count_panel($individual_count) {
 //
 // Tulostaa statistiikkasivun tietopaneelin
 //
-function create_html_statistics_panel($barray, $darray) {
+function create_html_statistics_panel() {
     
     echo "</div>\n";
     
@@ -311,14 +324,21 @@ function create_html_statistics_panel($barray, $darray) {
     echo "      <td>Vuosi</td>\n";
     echo "      <td>Syntyneet</td>\n";
     echo "      <td>Kuolleet</td>\n";
+    echo "      <td>Vihityt</td>\n";
+    echo "      <td>Lapsikuolleisuus 0-1 v</td>\n";
     echo "  </tr>\n";
     
     for($year = 1700;$year<=date("Y");$year++) {
         
         echo "      <tr>\n";
         echo "          <td>".$year."</td>\n";
-        echo "          <td>".$barray[$year-1700]."</td>\n";
-        echo "          <td>".$darray[$year-1700]."</td>\n";
+        $statisticsarray = get_statistics_by_year($year);
+        foreach ($statisticsarray as $statistics) {
+            echo "          <td>".$statistics[1]."</td>\n";
+            echo "          <td>".$statistics[2]."</td>\n";
+            echo "          <td>".$statistics[3]."</td>\n";
+            echo "          <td>".$statistics[4]."</td>\n";
+        }
         echo "  </tr>\n";
     }
 }

@@ -14,7 +14,7 @@ $pagenumber = 0;
 if(isset($_GET["page"]) && ctype_digit($_GET["page"])) {
     
     $pagenumber = $_GET["page"];
-    
+        
     if ($_SESSION["individual_constraints_search"]) {
         
         $query = $_SESSION["individual_constraints_query"];
@@ -50,9 +50,7 @@ if(isset($_POST["individual_search"])) {
             OR source LIKE '%".$_POST["individual"]."%'
             OR note LIKE '%".$_POST["individual"]."%'
             ";
-    
-    LOGTEXT("_POST[individual]) : Hakulauseke on : ".$query);
-    
+       
     // Hakukentän tieto laitetaan talteen
     $_SESSION["individual_name"] = $_POST["individual"];
     
@@ -61,6 +59,8 @@ if(isset($_POST["individual_search"])) {
     
     // On tehty yleinen haku
     $_SESSION["individual_name_search"] = true;
+
+    LOGTEXT("_POST[individual]) : Hakulauseke on : ".$query."  :  individual_name_search = ".$_SESSION["individual_name_search"]);
 }
 
 /*
@@ -292,6 +292,7 @@ LOGTEXT("Sivujen määrä : ".$pages);
 
 create_html_start("Hae henkilö");
 
+create_html_individual_search_header_banner();
 create_html_individual_search_upperbanner();
 
 create_html_searchpanel();
@@ -359,6 +360,7 @@ function clear_constraints_fields() {
     $_SESSION["moveplace"] = "";
     
     $_SESSION["individual_constraints_search"] = false;
+    $_SESSION["individual_name_search"] = '';
 }
 
 function create_time_search_query($element, $time_string) {
@@ -372,50 +374,98 @@ function create_time_search_query($element, $time_string) {
     // Hakukriteerinä tulee tasan yksi aika
     if (sizeof($timearray) == 1) {
         
-        $bday = explode(".", $timearray[0]);
+        $date = explode(".", $timearray[0]);
         
-        LOGARRAY($bday);
+        LOGARRAY($date);
         
         // Aikana tulee pelkkä vuosiluku
-        if (sizeof($bday) == 1) {
+        if (sizeof($date) == 1) {
             
-            $time_query = " $element LIKE '%".$bday[0]."'";
+            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) = '1972';
+            $time_query = " YEAR($element) = '".$date[0]."'";
             
-            // Aikana tulee päivä.kuukausi.vuosi
+        // Aikana tulee vuosi-kuukausi-päivä
         } else {
             
-            $time_query = " $element LIKE '".$bday[0].".".$bday[1].".".$bday[2]."'";
+            // SELECT * FROM `familynet_individuals_v2` WHERE bday = '1972-01-01';
+            $time_query = " $element = '".$date[2]."-".$date[1]."-".$date[0]."'";
         }
  
     // Hakukriteerinä tulee ennen tätä aikaa
-    } /*else if ($timearray[1]) {
+    } else if ($timearray[1] && !$timearray[0]) {
                        
-        $bday = explode(".", $timearray[1]);
+        LOGTEXT("Haettu aika : -".$timearray[1]);
         
-        LOGARRAY($bday);
+        $date = explode(".", $timearray[1]);
+        
+        LOGARRAY($date);
         
         // Aikana tulee pelkkä vuosiluku
-        if (sizeof($bday) == 1) {
+        if (sizeof($date) == 1) {
             
-            $time_query = " bday < '%".$bday[0]."'";
+            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) < '1972';
+
+            $time_query = " YEAR($element) <= '".$date[0]."'";
             
             // Aikana tulee päivä.kuukausi.vuosi
         } else {
             
-            $time_query = " bday < '".$bday[0].".".$bday[1].".".$bday[2]."'";
+            // SELECT * FROM `familynet_individuals_v2` WHERE bday < '1972-01-01';
+            $time_query = " $element <= '".$date[2].".".$date[1].".".$date[0]."'";
         }
         
-        // Hakukriteerinä tulee tämän ajan jälkeen
-    } else if (!$timearray[1]) {
+    // Hakukriteerinä tulee tämän ajan jälkeen
+    } else if (!$timearray[1] && $timearray[0]) {
         
         LOGTEXT("Haettu aika : ".$timearray[0]."-");
+ 
+        $date = explode(".", $timearray[0]);
         
+        LOGARRAY($date);
+        
+        // Aikana tulee pelkkä vuosiluku
+        if (sizeof($date) == 1) {
+            
+            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) > '1972';
+            
+            $time_query = " YEAR($element) >= '".$date[0]."'";
+            
+            // Aikana tulee päivä.kuukausi.vuosi
+        } else {
+            
+            // SELECT * FROM `familynet_individuals_v2` WHERE bday > '1972-01-01';
+            $time_query = " $element >= '".$date[2].".".$date[1].".".$date[0]."'";
+        }
+        
+
+
     // Hakukriteerinä tulee näiden aikojen välissä
-    } else {
+    } else if ($timearray[0] && $timearray[1]) {
         
         LOGTEXT("Haettu aika : ".$timearray[0]."-".$timearray[1]);
+
+        $date_before = explode(".", $timearray[0]);
+        
+        $date_after = explode(".", $timearray[1]);
+        
+        LOGARRAY($date_before);
+        LOGARRAY($date_after);
+
+        // Aikana tulee pelkkä vuosiluku
+        if ((sizeof($date_before) == 1) && (sizeof($date_after) == 1)) {
+            
+            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) BETWEEN '1972' AND '1973';
+            
+            $time_query = " YEAR($element) BETWEEN '".$date_before[0]."' AND '".$date_after[0]."'";
+            
+            // Aikana tulee päivä.kuukausi.vuosi
+        } else {
+            
+            // SELECT * FROM `familynet_individuals_v2` WHERE bday BETWEEN '2021-01-01' AND '2022-11-01';
+            $time_query = " $element BETWEEN '".$date_before[2].".".$date_before[1].".".$date_before[0]."' AND '".$date_after[2].".".$date_after[1].".".$date_after[0]."'";
+        }   
     }
-    */
+    
     return $time_query;
 }
 

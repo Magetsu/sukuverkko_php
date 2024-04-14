@@ -37,7 +37,7 @@ if(isset($_POST["logout_credit"])) {
         
         // Ja sitten hävitetään kaikki istuntodata.
         session_destroy();
-        
+                
         LOGTEXT("Kirjaudutaan <a href=\"main.php\">ulos</a>.");
         
         if (!GET_LOGGING())
@@ -68,10 +68,11 @@ if(isset($_POST["erase_tables"])) {
     
     LOGTEXT("Poistetaan taulukot tietokannasta.");
     
-    erase_table("familynet_families");
-    erase_table("familynet_individuals");
-    erase_table("familynet_sources");
-
+    erase_table(FAMILIES);
+    erase_table(INDIVIDUALS);
+    erase_table(SOURCES);
+    erase_table(STATISTICS);
+    
     LOGTEXT("Ohjataan <a href=\"main.php\">pääsivulle</a>.");
 
     if (!GET_LOGGING()) {
@@ -119,4 +120,5 @@ create_html_main_upperbanner();
 create_html_count_panel($_SESSION["individual_count"],$_SESSION["family_count"]);
 
 create_html_end();
+
 ?>

@@ -4,6 +4,7 @@ header("Content-Type: text/html; charset=utf-8");
 ini_set("error_reporting", E_ALL | E_STRICT);
 ini_set("display_errors", 1);
 
+require_once("constants.php");
 require_once("logging.php");
 
 //
@@ -30,7 +31,7 @@ function connect_to_database() {
     // poikkeus, joten se pitää napata.
     try {
         
-        $connection = new PDO("mysql:host=db1.n.kapsi.fi;dbname=magetsu","magetsu","FgQiYWtkRX");
+        $connection = new PDO(HOST,USERNAME,PASSWORD);
         
     } catch (PDOException $e) {
         
@@ -54,9 +55,10 @@ function check_database() {
     
     $conn = connect_to_database();
     
-    $table_families = 'familynet_families';
-    $table_individuals = 'familynet_individuals';
-    $table_sources = 'familynet_sources';
+    $table_families = FAMILIES;
+    $table_individuals = INDIVIDUALS;
+    $table_sources = SOURCES;
+    $table_statistics = STATISTICS;
     
     $sql = 'SHOW TABLES';
     
@@ -68,7 +70,7 @@ function check_database() {
     
     //LOGARRAY($array);
     
-    if (in_array($table_families,$array) && in_array($table_individuals,$array) && in_array($table_sources,$array)) {
+    if (in_array($table_families,$array) && in_array($table_individuals,$array) && in_array($table_sources,$array) && in_array($table_statistics,$array)) {
         
         LOGTEXT("CHECK_DATABASE : Taulut ovat olemassa tietokannassa.");
         return true;
@@ -88,47 +90,59 @@ function create_tables($table_name) {
     LOGTEXT("CREATE_TABLES : Luodaan taulut tietokantaan.");
     
     $conn = connect_to_database();
+
+    $database = DB;
     
+    // Poistetaan taulut ennenkuin luodaan uudet taulut
     erase_table($table_name);
     
     switch  ($table_name) {
-        case "familynet_families":
+        case FAMILIES:
 
             // Luodaan nyt uusi perhetietokanta.
-            $sql="CREATE TABLE IF NOT EXISTS magetsu.familynet_families ( xref VARCHAR(10),
+            $sql="CREATE TABLE IF NOT EXISTS $database.$table_name ( xref VARCHAR(10),
                                                                   husb VARCHAR(10),
                 												  wife VARCHAR(10),
-                												  marday VARCHAR(100),
+                												  marday DATE,
                 												  marplace VARCHAR(100),
 													              child VARCHAR(1000) )";
             break;
-        case "familynet_individuals":
+        case INDIVIDUALS:
             
             // Luodaan nyt uusi henkilötietokanta.
-            $sql="CREATE TABLE IF NOT EXISTS magetsu.familynet_individuals ( xref VARCHAR(10),
+            $sql="CREATE TABLE IF NOT EXISTS $database.$table_name ( xref VARCHAR(10),
                                                                      givn VARCHAR(100),
                 													 surn VARCHAR(100),
                 													 sex VARCHAR(1),
                 													 occu VARCHAR(100),
-                													 bday VARCHAR(100),
+                													 bday DATE,
                 													 bplace VARCHAR(100),
-                													 dday VARCHAR(100),
+                													 dday DATE,
                 													 dplace VARCHAR(100),
                 													 dcause VARCHAR(100),
-                													 buday VARCHAR(100),
+                													 buday DATE,
                 													 buplace VARCHAR(100),
-                													 chrday VARCHAR(100),
+                													 chrday DATE,
                 													 chrplace VARCHAR(100),
                 													 note VARCHAR(10000),
                 													 move VARCHAR(100),
                 													 isdead INT(1),
                 													 source VARCHAR(100) )";
             break;
-        case "familynet_sources":
+        case SOURCES:
             
             // Luodaan nyt uusi lähdetietokanta.
-            $sql="CREATE TABLE IF NOT EXISTS magetsu.familynet_sources ( xref VARCHAR(10),
-													             name VARCHAR(100) )";
+            $sql="CREATE TABLE IF NOT EXISTS $database.$table_name ( xref VARCHAR(10),
+													               name VARCHAR(100) )";
+            break;
+        case STATISTICS:
+            
+            // Luodaan nyt uusi statistiikkatietokanta.
+            $sql="CREATE TABLE IF NOT EXISTS $database.$table_name ( year VARCHAR(10),
+                                                                    bircount VARCHAR(10),
+													                marcount VARCHAR(10),
+                                                                    detcount VARCHAR(10),
+                                                                    infdcount VARCHAR(10) )";
             break;
         default: 
             break;
@@ -148,7 +162,9 @@ function erase_table($table_name) {
     
     $conn = connect_to_database();
 
-    $sql = "DROP TABLE IF EXISTS magetsu.$table_name";
+    $database = DB;
+    
+    $sql = "DROP TABLE IF EXISTS $database.$table_name";
     
     $query = $conn->prepare($sql);
     $query->execute();
@@ -163,7 +179,8 @@ function get_individual_count($query) {
     
     $conn = connect_to_database();
     
-    $table = 'magetsu.familynet_individuals';
+    $database = DB;
+    $table = INDIVIDUALS;
     
     if(!isset($_SESSION["user_id"])) {
         
@@ -171,11 +188,11 @@ function get_individual_count($query) {
         
         if ($query) {
             
-            $sql = "SELECT COUNT(*) FROM $table WHERE isdead='1' AND ($query)";
+            $sql = "SELECT COUNT(*) FROM $database.$table WHERE isdead='1' AND ($query)";
             
         } else {
             
-            $sql = "SELECT COUNT(*) FROM $table WHERE isdead='1'";
+            $sql = "SELECT COUNT(*) FROM $database.$table WHERE isdead='1'";
         }
     } else if(isset($_SESSION["user_id"])) {
         
@@ -183,11 +200,11 @@ function get_individual_count($query) {
         
         if ($query) {
             
-            $sql = "SELECT COUNT(*) FROM $table WHERE $query";
+            $sql = "SELECT COUNT(*) FROM $database.$table WHERE $query";
             
         } else {
             
-            $sql = "SELECT COUNT(*) FROM $table";
+            $sql = "SELECT COUNT(*) FROM $database.$table";
             
         }
     }
@@ -210,9 +227,10 @@ function get_family_count() {
     
     $conn = connect_to_database();
     
-    $table = 'magetsu.familynet_families';
+    $database = DB;
+    $table = FAMILIES;
     
-    $sql = "SELECT COUNT(*) FROM $table";
+    $sql = "SELECT COUNT(*) FROM $database.$table";
     
     $query = $conn->prepare($sql);
     $query->execute();
@@ -232,8 +250,10 @@ function import_individual_to_database($record) {
     
     $conn = connect_to_database();
     
-    $table = 'magetsu.familynet_individuals';
-    $sql = "INSERT INTO $table (xref,givn,surn,sex,occu,bday,bplace,dday,dplace,dcause,buday,buplace,chrday,chrplace,note,move,isdead,source) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $database = DB;
+    $table = INDIVIDUALS;
+    
+    $sql = "INSERT INTO $database.$table (xref,givn,surn,sex,occu,bday,bplace,dday,dplace,dcause,buday,buplace,chrday,chrplace,note,move,isdead,source) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $query = $conn->prepare($sql);
     $query->execute([$record[0],$record[1],$record[2],$record[3],$record[4],$record[5],$record[6],$record[7],$record[8],$record[9],$record[10],$record[11],$record[12],$record[13],$record[14],$record[15],$record[16],$record[17]]);
@@ -248,8 +268,10 @@ function import_family_to_database($record) {
     
     $conn = connect_to_database();
     
-    $table = 'magetsu.familynet_families';
-    $sql = "INSERT INTO $table (xref,husb,wife,marday,marplace,child) values ( ?, ?, ?, ?, ?, ?)";
+    $database = DB;
+    $table = FAMILIES;
+    
+    $sql = "INSERT INTO $database.$table (xref,husb,wife,marday,marplace,child) values ( ?, ?, ?, ?, ?, ?)";
     
     $query = $conn->prepare($sql);
     $query->execute([$record[0],$record[1],$record[2],$record[3],$record[4],$record[5]]);
@@ -264,8 +286,10 @@ function import_source_to_database($record) {
     
     $conn = connect_to_database();
     
-    $table = 'magetsu.familynet_sources';
-    $sql = "INSERT INTO $table (xref,name) values ( ?, ?)";
+    $database = DB;
+    $table = SOURCES;
+    
+    $sql = "INSERT INTO $database.$table (xref,name) values ( ?, ?)";
     
     $query = $conn->prepare($sql);
     $query->execute([$record[0],$record[1]]);
@@ -280,7 +304,8 @@ function fetch_individual_database($query, $limit, $offset) {
     
     $connect = connect_to_database();
     
-    $table = 'magetsu.familynet_individuals';
+    $database = DB;
+    $table = INDIVIDUALS;
     
     if(!isset($_SESSION["user_id"])) {
         
@@ -288,11 +313,11 @@ function fetch_individual_database($query, $limit, $offset) {
         
         if ($query) {
             
-            $sql = "SELECT * FROM $table WHERE isdead='1' AND ($query) LIMIT $limit OFFSET $offset";
+            $sql = "SELECT * FROM $database.$table WHERE isdead='1' AND ($query) LIMIT $limit OFFSET $offset";
             
         } else {
             
-            $sql = "SELECT * FROM $table WHERE isdead='1' LIMIT $limit OFFSET $offset";
+            $sql = "SELECT * FROM $database.$table WHERE isdead='1' LIMIT $limit OFFSET $offset";
             
         }
     } else if(isset($_SESSION["user_id"])) {
@@ -301,11 +326,11 @@ function fetch_individual_database($query, $limit, $offset) {
         
         if ($query) {
             
-            $sql = "SELECT * FROM $table WHERE $query LIMIT $limit OFFSET $offset";
+            $sql = "SELECT * FROM $database.$table WHERE $query LIMIT $limit OFFSET $offset";
             
         } else {
             
-            $sql = "SELECT * FROM $table LIMIT $limit OFFSET $offset";
+            $sql = "SELECT * FROM $database.$table LIMIT $limit OFFSET $offset";
             
         }
     }
@@ -326,9 +351,10 @@ function get_source($source) {
         
     $conn = connect_to_database();
     
-    $source_table = 'magetsu.familynet_sources';
+    $database = DB;
+    $table = SOURCES;
     
-    $sql = "SELECT name FROM $source_table WHERE $source_table.xref = '$source'";
+    $sql = "SELECT name FROM $database.$table WHERE magetsu.$table.xref = '$source'";
     
     $query = $conn->prepare($sql);
     $query->execute();
@@ -346,9 +372,10 @@ function get_individual_statistics_count() {
     
     $connect = connect_to_database();
     
-    $table = 'magetsu.familynet_individuals';
+    $database = DB;
+    $table = INDIVIDUALS;
     
-    $sql = "SELECT COUNT(*) FROM $table";
+    $sql = "SELECT COUNT(*) FROM $database.$table";
     
     $query = $connect->prepare($sql);
     $query->execute();
@@ -365,15 +392,84 @@ function get_individual_statistics_count() {
 function get_count_by_year($data, $year) {
     
     $connect = connect_to_database();
+
+    $database = DB;
     
-    $source_table = 'magetsu.familynet_individuals';
-    
-    $sql = "SELECT COUNT(*) FROM $source_table WHERE $data LIKE '%$year'";
-    
+    switch ($data) {
+        case 'bday':
+        case 'dday':
+            $table = INDIVIDUALS;
+            break;
+        case 'marday':
+            $table = FAMILIES;
+            break;
+        default:
+            return null;
+    }
+   
+    $sql = "SELECT COUNT(*) FROM $database.$table WHERE YEAR($data) = '".$year."'";
+      
     $query = $connect->prepare($sql);
     $query->execute();
     $count = $query->fetchColumn();
     
     return $count;
+}
+
+function get_infantdeath_count_by_year($year) {
+    
+    $connect = connect_to_database();
+    
+    $database = DB;
+    $table = INDIVIDUALS;
+    
+    $sql = "SELECT COUNT(*) FROM $database.$table WHERE YEAR(dday) = '".$year."' AND DATEDIFF(dday, bday) < '365'";
+   
+    $query = $connect->prepare($sql);
+    $query->execute();
+    $count = $query->fetchColumn();
+    
+    return $count;
+}
+
+//
+//  Asetetaan vuoden statistiikka tietokantaan
+//
+function set_statistics_by_year($year, $statistics) {
+ 
+    $conn = connect_to_database();
+    
+    $database = DB;
+    $table = STATISTICS;
+    
+    $sql = "INSERT INTO $database.$table (year,bircount,marcount,detcount,infdcount) values ( $year, $statistics[0], $statistics[1], $statistics[2], $statistics[3])";
+ 
+    LOGTEXT("SQL-clause : ".$sql);
+    
+    $query = $conn->prepare($sql);
+    $query->execute();
+}
+
+//
+//  Asetetaan vuoden statistiikka tietokantaan
+//
+function get_statistics_by_year($year) {
+    
+    $conn = connect_to_database();
+    
+    $database = DB;
+    $table = STATISTICS;
+ 
+    $sql = "SELECT * FROM $database.$table WHERE year = $year";
+    
+    //LOGTEXT("SQL-clause : ".$sql);
+    
+    $query = $conn->prepare($sql);
+    $query->execute();
+    $statistics = $query->fetchAll();
+
+    //LOGARRAY($statistics);
+    
+    return $statistics;
 }
 ?>
