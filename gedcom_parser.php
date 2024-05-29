@@ -366,25 +366,4 @@ function display_source_card($source_record) {
     LOGTEXT("INSERT INTO magetsu.familynet_sources (xref, name) values ( ?, ?)");
 }
 
-function create_statistics() {
-  
-    LOGTEXT("CREATE_STATISTICS : Luodaan statistiikka-tietokanta");
-    
-    for($year = 1700;$year<=date("Y");$year++) {
-        
-        $statistics = array();
-        
-        $birthday_count = get_count_by_year("bday",$year);
-        $deathday_count = get_count_by_year("dday",$year);
-        $marrday_count = get_count_by_year("marday",$year);
-        $infantdeath_count = get_infantdeath_count_by_year($year);
-        array_push($statistics,$birthday_count);
-        array_push($statistics,$deathday_count);
-        array_push($statistics,$marrday_count);
-        array_push($statistics,$infantdeath_count);
-        set_statistics_by_year($year, $statistics);
-    }
-    
-}
-
 ?>

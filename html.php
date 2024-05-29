@@ -50,33 +50,26 @@ function create_html_header_panel() {
 //
 // Tulostaa pääsivun
 //
-function create_html_main_upperbanner() {
+function create_html_main_button_panel() {
     
     echo "<form action=\"main.php\" method=\"post\">\n";
     echo " <input type=\"submit\" name=\"a\" value=\"A\">\n";
-    echo " <input type=\"submit\" name=\"b\" value=\"B\">\n";
+
     echo " <input type=\"submit\" name=\"statistics\" value=\"Tilastotietoa (kaikki)\">\n";
-    if(isset($_SESSION["user_id"])) {
-        
-        echo " <input type=\"submit\" name=\"search_individual\" value=\"Etsi henkilö (kaikki)\">\n";
-        
-    } else if(!isset($_SESSION["user_id"])){
-        
-        echo " <input type=\"submit\" name=\"search_individual\" value=\"Etsi henkilö (vain kuolleet)\">\n";
-    }
-    
-    if(isset($_SESSION["user_id"])) {
-        
-        //echo " <input type=\"submit\" name=\"erase_tables\" value=\"Poista tietokanta\">\n";
-        echo " <input type=\"submit\" name=\"upload_gedcom\" value=\"Tuo gedcom\">\n";
-    }
     
     if(!isset($_SESSION["user_id"])) {
         
+        echo " <input type=\"submit\" name=\"get_marriage\" value=\"Hae avioliitot (molemmat kuolleet)\">\n";
+        echo " <input type=\"submit\" name=\"search_individual\" value=\"Etsi henkilö (vain kuolleet)\">\n";
         echo " <input type=\"submit\" name=\"login_credit\" value=\"Kirjaudu sisälle\">\n";
         
     } else if(isset($_SESSION["user_id"])) {
         
+        echo " <input type=\"submit\" name=\"get_marriage\" value=\"Hae avioliitot (kaikki)\">\n";
+        echo " <input type=\"submit\" name=\"search_individual\" value=\"Etsi henkilö (kaikki)\">\n";
+        echo " <input type=\"submit\" name=\"upload_gedcom\" value=\"Tuo gedcom\">\n";
+        echo " <input type=\"submit\" name=\"create_statistics\" value=\"Luo tilastotietokanta\">\n";
+        echo " <input type=\"submit\" name=\"create_marriages\" value=\"Luo avioliittotietokanta\">\n";
         echo " <input type=\"submit\" name=\"logout_credit\" value=\"Kirjaudu ulos\">\n";
     }
 
@@ -126,7 +119,7 @@ function create_html_upload() {
 //
 // Tulostaa otsikkopaneelin
 //
-function create_html_individual_search_header_banner() {
+function create_html_individual_search_help_banner() {
     
     echo "Haku toimii päivämäärien osalta siten että voi joko hakea tarkalla päivämääräällä tai vuoden tarkkuudella.<br>\n";
     echo "Lisättäessa - merkki eteen haetaan kaikki tiedot ennen päivämäärää (-1972 tai -5.5.1972).<br>\n";
@@ -137,7 +130,7 @@ function create_html_individual_search_header_banner() {
 //
 // Tulostaa pääsivun
 //
-function create_html_individual_search_upperbanner() {
+function create_html_individual_search_button_panel() {
     
     echo "<form action=\"search_individual.php\" method=\"post\">\n";
     echo " <input type=\"submit\" name=\"d\" value=\"D\">\n";
@@ -148,9 +141,25 @@ function create_html_individual_search_upperbanner() {
 }
 
 //
+// Tulostaa historiapaneelin
+//
+function create_history() {
+    
+    echo "5.5.2024 Lisättiin haku avioliiton mukaan<br><br>\n";
+}
+
+//
+// Tulostaa copyrightpaneelin
+//
+function create_copyrigth() {
+    
+    echo "(c) 2024 Marko Alaluusua<br>\n";
+}
+
+//
 // Tulostaa hakupaneelin
 //
-function create_html_searchpanel() {
+function create_html_individual_search_constraints_panel() {
     
     echo "<div class=\"row\">";
     echo "  <form action=\"search_individual.php\" method=\"post\">\n";
@@ -196,12 +205,10 @@ function create_html_searchpanel() {
     echo "      <input type=\"text\" id=\"chrplace\" name=\"chrplace\" value=\"".$_SESSION["chrplace"]."\"><br>";
     echo "  </div>\n";
     
-    //echo "  <div class=\"column_individual\">";
-    //echo "      <label for=\"moveday\">Rajaus muuttopäivällä : </label><br>";
-    //echo "      <input type=\"text\" id=\"moveday\" name=\"moveday\" value=\"".$_SESSION["moveday"]."\"><br>";
-    //echo "      <label for=\"moveplace\">Rajaus muuttopaikalla : </label><br>";
-    //echo "      <input type=\"text\" id=\"moveplace\" name=\"moveplace\" value=\"".$_SESSION["moveplace"]."\"><br>";
-    //echo "  </div>\n";
+    echo "  <div class=\"column_individual\">";
+    echo "      <label for=\"moveplace\">Rajaus muuttopaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"move\" name=\"move\" value=\"".$_SESSION["move"]."\"><br>";
+    echo "  </div>\n";
     
     echo "  <div class=\"column_individual\">";
     echo "      <button class=\"button\" type=\"submit\" name=\"individual_constraints_search\">Hae rajauksella</button>\n";
@@ -223,7 +230,7 @@ function §($individual_count) {
 }
 
 //
-// Tulostaa tietopaneelin
+// Tulostaa henkilötietopaneelin
 //
 function create_html_individual_data_panel($pages, $pagenumber, $array) {
     
@@ -293,7 +300,7 @@ function create_html_search_count_panel($individual_count) {
 //
 // Tulostaa statistiikkasivun yläpaneelin
 //
-function create_html_statistics_upperbanner() {
+function create_html_statistics_button_panel() {
     
     echo "<form action=\"statistics.php\" method=\"post\">\n";
     echo " <input type=\"submit\" name=\"g\" value=\"G\">\n";
@@ -341,6 +348,139 @@ function create_html_statistics_panel() {
         }
         echo "  </tr>\n";
     }
+}
+
+//
+// Tulostaa avioliiton hakusivun
+//
+function create_html_marriage_search_button_panel() {
+    
+    echo "<form action=\"search_marriage.php\" method=\"post\">\n";
+    echo " <input type=\"submit\" name=\"d\" value=\"D\">\n";
+    echo " <input type=\"submit\" name=\"e\" value=\"E\">\n";
+    echo " <input type=\"submit\" name=\"f\" value=\"F\">\n";
+    echo " <input type=\"submit\" name=\"logout_marriage\" value=\"Palaa takaisin\">\n";
+    echo "</form>\n";
+}
+
+//
+// Tulostaa hakupaneelin
+//
+function create_html_marriage_search_constraints_panel() {
+    
+    echo "<div class=\"row\">";
+    echo "  <form action=\"search_marriage.php\" method=\"post\">\n";
+    echo "  <div class=\"column_marriage\">";
+    echo "      <label for=\"givn\">Rajaus miehen etunimellä : </label><br>";
+    echo "      <input type=\"text\" id=\"husbgivn\" name=\"husbgivn\" value=\"".$_SESSION["husbgivn"]."\"><br>";
+    echo "      <label for=\"surn\">Rajaus miehen sukunimellä : </label><br>";
+    echo "      <input type=\"text\" id=\"husbsurn\" name=\"husbsurn\" value=\"".$_SESSION["husbsurn"]."\"><br>";
+    echo "  </div>\n";
+    
+    echo "  <div class=\"column_marriage\">";
+    //echo "      <label for=\"bday\">Rajaus miehen syntymäpäivällä : </label><br>";
+    //echo "      <input type=\"text\" id=\"husbbday\" name=\"husbbday\" value=\"".$_SESSION["husbbday"]."\"><br>";
+    echo "      <label for=\"bplace\">Rajaus miehen syntymäpaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"husbbplace\" name=\"husbbplace\" value=\"".$_SESSION["husbbplace"]."\"><br>";
+    //echo "      <label for=\"bday\">Rajaus miehen kuolinpäivällä : </label><br>";
+    //echo "      <input type=\"text\" id=\"husbdday\" name=\"husbdday\" value=\"".$_SESSION["husbdday"]."\"><br>";
+    echo "      <label for=\"bplace\">Rajaus miehen kuolinpaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"husbdplace\" name=\"husbdplace\" value=\"".$_SESSION["husbdplace"]."\"><br>";
+    echo "  </div>\n";
+       
+    echo "  <div class=\"column_marriage\">";
+    echo "      <label for=\"givn\">Rajaus vaimon etunimellä : </label><br>";
+    echo "      <input type=\"text\" id=\"wifegivn\" name=\"wifegivn\" value=\"".$_SESSION["wifegivn"]."\"><br>";
+    echo "      <label for=\"surn\">Rajaus vaimon sukunimellä : </label><br>";
+    echo "      <input type=\"text\" id=\"wifesurn\" name=\"wifesurn\" value=\"".$_SESSION["wifesurn"]."\"><br>";
+    echo "  </div>\n";
+       
+    echo "  <div class=\"column_marriage\">";
+    //echo "      <label for=\"bday\">Rajaus vaimon syntymäpäivällä : </label><br>";
+    //echo "      <input type=\"text\" id=\"wifebday\" name=\"wifebday\" value=\"".$_SESSION["wifebday"]."\"><br>";
+    echo "      <label for=\"bplace\">Rajaus vaimon syntymäpaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"wifebplace\" name=\"wifebplace\" value=\"".$_SESSION["wifebplace"]."\"><br>";
+    //echo "      <label for=\"bday\">Rajaus vaimon kuolinpäivällä : </label><br>";
+    //echo "      <input type=\"text\" id=\"wifedday\" name=\"wifedday\" value=\"".$_SESSION["wifedday"]."\"><br>";
+    echo "      <label for=\"bplace\">Rajaus vaimon kuolinpaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"wifedplace\" name=\"wifedplace\" value=\"".$_SESSION["wifedplace"]."\"><br>";
+    echo "  </div>\n";
+
+    echo "  <div class=\"column_marriage\">";
+    echo "      <label for=\"buday\">Rajaus vihkimispäivällä : </label><br>";
+    echo "      <input type=\"text\" id=\"marday\" name=\"marday\" value=\"".$_SESSION["marday"]."\"><br>";
+    echo "      <label for=\"buplace\">Rajaus vihkimispaikalla : </label><br>";
+    echo "      <input type=\"text\" id=\"marplace\" name=\"marplace\" value=\"".$_SESSION["marplace"]."\"><br>";
+    echo "  </div>\n";
+ 
+    echo "  <div class=\"column_individual\">";
+    echo "      <button class=\"button\" type=\"submit\" name=\"marriage_search\">Hae rajauksella</button>\n";
+    echo "  </div>\n";
+    
+    
+    echo "  </form>\n";
+    echo "  </div>\n";
+    echo "</div>";
+}
+
+//
+// Tulostaa avioliittotietopaneelin
+//
+function create_html_marriage_data_panel($pages, $pagenumber, $array) {
+    
+    echo "<div class=\"pages\" id=\"pages\">\n";
+    for($page = 0; $page < $pages; ++$page)
+    {
+        if($pagenumber == $page)
+            echo $page + 1, " ";
+            else
+                echo "<a href=\"search_marriage.php?page=".$page."\">",
+                $page + 1, "</a> ";
+    }
+    echo "</div>\n";
+    
+    echo "<table border='1'>\n";
+    
+    echo "  <tr>\n";
+    echo "      <td>Miehen etunimi</td>\n";
+    echo "      <td>Miehen sukunimi</td>\n";
+    echo "      <td>Miehen syntymäpäivä</td>\n";
+    echo "      <td>Miehen syntymäpaikka</td>\n";
+    echo "      <td>Miehen kuolinpäivä</td>\n";
+    echo "      <td>Miehen kuolinpaikka</td>\n";
+    echo "      <td>Vaimon etunimi</td>\n";
+    echo "      <td>Vaimon sukunimi</td>\n";
+    echo "      <td>Vaimon syntymäpäivä</td>\n";
+    echo "      <td>Vaimon syntymäpaikka</td>\n";
+    echo "      <td>Vaimon kuolinpäivä</td>\n";
+    echo "      <td>Vaimon kuolinpaikka</td>\n";
+    echo "      <td>Avioitusmispäivä</td>\n";
+    echo "      <td>Avioitusmispaikka</td>\n";
+    echo "      <td>Lasten lukumäärä</td>\n";
+    echo "  </tr>\n";
+    
+    foreach ($array as $marriage) {
+        
+        echo "      <tr>\n";
+        echo "          <td>".$marriage['husbgivn']."</td>\n";
+        echo "          <td>".$marriage['husbsurn']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($marriage['husbbday'])."</td>\n\n";
+        echo "          <td>".$marriage['husbbplace']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($marriage['husbdday'])."</td>\n";
+        echo "          <td>".$marriage['husbdplace']."</td>\n";
+        echo "          <td>".$marriage['wifegivn']."</td>\n";
+        echo "          <td>".$marriage['wifesurn']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($marriage['wifebday'])."</td>\n\n";
+        echo "          <td>".$marriage['wifebplace']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($marriage['wifedday'])."</td>\n";
+        echo "          <td>".$marriage['wifedplace']."</td>\n";
+        echo "          <td>".modify_record_date_to_day($marriage['marday'])."</td>\n";
+        echo "          <td>".$marriage['marplace']."</td>\n";
+        echo "          <td>".$marriage['childcount']."</td>\n";
+        echo "  </tr>\n";
+    }
+    
+    echo "</table>\n";
 }
 
 ?>

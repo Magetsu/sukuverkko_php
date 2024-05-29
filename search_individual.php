@@ -3,10 +3,9 @@
 require_once("logging.php");
 require_once("html.php");
 require_once("sql.php");
+require_once("create_query.php");
 
 session_start();
-
-define ("RESULTS_IN_PAGE", 1000);
 
 $query = null;
 $pagenumber = 0;
@@ -32,7 +31,7 @@ if(isset($_POST["individual_search"])) {
     
     LOGTEXT("POST[individual_search]) : Haetaan tietokannasta nimellä ".$_POST["individual"]);
         
-    clear_constraints_fields();
+    clear_individual_constraints_fields();
     
     $query = " givn LIKE '%".$_POST["individual"]."%'
             OR surn LIKE '%".$_POST["individual"]."%'
@@ -75,127 +74,58 @@ if(isset($_POST["individual_constraints_search"])) {
     
     if ($_POST["givn"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["givn"]);
-        
-        $query .= " givn LIKE '%".$_POST["givn"]."%'";
-        
-        ++$constraintsCount;
-        
-        $_SESSION["givn"] = $_POST["givn"];
+        $query .= get_constraint_query("givn", $constraintsCount);         
+        ++$constraintsCount;       
     }
     
     if ($_POST["surn"]) {
-        
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["surn"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " surn LIKE '".$_POST["surn"]."'";
-        
+                
+        $query .= get_constraint_query("surn", $constraintsCount);       
         ++$constraintsCount;
-        
-        $_SESSION["surn"] = $_POST["surn"];
     }
 
     if ($_POST["bplace"]) {
-        
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["bplace"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " bplace LIKE '".$_POST["bplace"]."'";
-        
+                
+        $query .= get_constraint_query("bplace", $constraintsCount);        
         ++$constraintsCount;
-        
-        $_SESSION["bplace"] = $_POST["bplace"];
     }
     
     if ($_POST["dplace"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["dplace"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " dplace LIKE '".$_POST["dplace"]."'";
-        
+        $query .= get_constraint_query("dplace", $constraintsCount);
         ++$constraintsCount;
-        
-        $_SESSION["dplace"] = $_POST["dplace"];
     }
     
     if ($_POST["dcause"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["dcause"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " dcause LIKE '%".$_POST["dcause"]."%'";
-        
+        $query .= get_constraint_query("dcause", $constraintsCount);
         ++$constraintsCount;
-        
-        $_SESSION["dcause"] = $_POST["dcause"];
     }
     
     if ($_POST["buplace"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["buplace"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " buplace LIKE '".$_POST["buplace"]."'";
-        
+        $query .= get_constraint_query("buplace", $constraintsCount);
         ++$constraintsCount;
-        
-        $_SESSION["buplace"] = $_POST["buplace"];
     }
     
     if ($_POST["chrplace"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["chrplace"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " chrplace LIKE '".$_POST["chrplace"]."'";
-        
+        $query .= get_constraint_query("chrplace", $constraintsCount);
         ++$constraintsCount;
-        
-        $_SESSION["chrplace"] = $_POST["chrplace"];
     }
 
     if ($_POST["occu"]) {
         
-        LOGTEXT("Haetaan rajauksella nimi : ".$_POST["occu"]);
-        
-        if ($constraintsCount > 0) {
-            
-            $query .= " AND ";
-        }
-        
-        $query .= " occu LIKE '%".$_POST["occu"]."%'";
-        
+        $query .= get_constraint_query("occu", $constraintsCount);
         ++$constraintsCount;
-        
-        $_SESSION["occu"] = $_POST["occu"];
     }
-
+    
+    if ($_POST["move"]) {
+        
+        $query .= get_constraint_query("move", $constraintsCount);
+        ++$constraintsCount;        
+    }
+    
     if ($_POST["bday"]) {
         
         LOGTEXT("Haetaan rajauksella nimi : ".$_POST["bday"]);
@@ -273,7 +203,7 @@ if(isset($_POST["logout_search"])) {
         
     LOGTEXT("Palataan <a href=\"main.php\">pääsivulle</a>.");
     
-    clear_constraints_fields();
+    clear_individual_constraints_fields();
     
     if (!GET_LOGGING())
         
@@ -292,10 +222,11 @@ LOGTEXT("Sivujen määrä : ".$pages);
 
 create_html_start("Hae henkilö");
 
-create_html_individual_search_header_banner();
-create_html_individual_search_upperbanner();
+create_html_individual_search_button_panel();
 
-create_html_searchpanel();
+create_html_individual_search_constraints_panel();
+create_html_individual_search_help_banner();
+
 create_html_search_count_panel($individual_count);
 
 $individuals = get_individual_database($query, $limit, $offset);
@@ -338,135 +269,6 @@ function get_individual_database($query, $limit, $offset) {
     }
         
     return $individualsql;
-}
-
-function clear_constraints_fields() {
-    
-    LOGTEXT("CLEAR_CONSTRAINTS_FIELDS : Tyhjennetään rajauskentät");
-    
-    $_SESSION["givn"] = "";
-    $_SESSION["surn"] = "";
-    $_SESSION["occu"] = "";
-    $_SESSION["bday"] = "";
-    $_SESSION["bplace"] = "";
-    $_SESSION["dday"] = "";
-    $_SESSION["dplace"] = "";
-    $_SESSION["dcause"] = "";
-    $_SESSION["buday"] = "";
-    $_SESSION["buplace"] = "";
-    $_SESSION["chrday"] = "";
-    $_SESSION["chrplace"] = "";
-    $_SESSION["moveday"] = "";
-    $_SESSION["moveplace"] = "";
-    
-    $_SESSION["individual_constraints_search"] = false;
-    $_SESSION["individual_name_search"] = '';
-}
-
-function create_time_search_query($element, $time_string) {
- 
-    LOGTEXT("CREATE_TIME_SEARCH_QUERY : Luodaan hakujen aikaleimat : ".$element." aikarajalla ".$time_string);
-    
-    $timearray = explode("-", $time_string);
-
-    LOGARRAY($timearray);
-    
-    // Hakukriteerinä tulee tasan yksi aika
-    if (sizeof($timearray) == 1) {
-        
-        $date = explode(".", $timearray[0]);
-        
-        LOGARRAY($date);
-        
-        // Aikana tulee pelkkä vuosiluku
-        if (sizeof($date) == 1) {
-            
-            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) = '1972';
-            $time_query = " YEAR($element) = '".$date[0]."'";
-            
-        // Aikana tulee vuosi-kuukausi-päivä
-        } else {
-            
-            // SELECT * FROM `familynet_individuals_v2` WHERE bday = '1972-01-01';
-            $time_query = " $element = '".$date[2]."-".$date[1]."-".$date[0]."'";
-        }
- 
-    // Hakukriteerinä tulee ennen tätä aikaa
-    } else if ($timearray[1] && !$timearray[0]) {
-                       
-        LOGTEXT("Haettu aika : -".$timearray[1]);
-        
-        $date = explode(".", $timearray[1]);
-        
-        LOGARRAY($date);
-        
-        // Aikana tulee pelkkä vuosiluku
-        if (sizeof($date) == 1) {
-            
-            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) < '1972';
-
-            $time_query = " YEAR($element) <= '".$date[0]."'";
-            
-            // Aikana tulee päivä.kuukausi.vuosi
-        } else {
-            
-            // SELECT * FROM `familynet_individuals_v2` WHERE bday < '1972-01-01';
-            $time_query = " $element <= '".$date[2].".".$date[1].".".$date[0]."'";
-        }
-        
-    // Hakukriteerinä tulee tämän ajan jälkeen
-    } else if (!$timearray[1] && $timearray[0]) {
-        
-        LOGTEXT("Haettu aika : ".$timearray[0]."-");
- 
-        $date = explode(".", $timearray[0]);
-        
-        LOGARRAY($date);
-        
-        // Aikana tulee pelkkä vuosiluku
-        if (sizeof($date) == 1) {
-            
-            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) > '1972';
-            
-            $time_query = " YEAR($element) >= '".$date[0]."'";
-            
-            // Aikana tulee päivä.kuukausi.vuosi
-        } else {
-            
-            // SELECT * FROM `familynet_individuals_v2` WHERE bday > '1972-01-01';
-            $time_query = " $element >= '".$date[2].".".$date[1].".".$date[0]."'";
-        }
-        
-
-
-    // Hakukriteerinä tulee näiden aikojen välissä
-    } else if ($timearray[0] && $timearray[1]) {
-        
-        LOGTEXT("Haettu aika : ".$timearray[0]."-".$timearray[1]);
-
-        $date_before = explode(".", $timearray[0]);
-        
-        $date_after = explode(".", $timearray[1]);
-        
-        LOGARRAY($date_before);
-        LOGARRAY($date_after);
-
-        // Aikana tulee pelkkä vuosiluku
-        if ((sizeof($date_before) == 1) && (sizeof($date_after) == 1)) {
-            
-            //SELECT * FROM `familynet_individuals_v2` WHERE YEAR(bday) BETWEEN '1972' AND '1973';
-            
-            $time_query = " YEAR($element) BETWEEN '".$date_before[0]."' AND '".$date_after[0]."'";
-            
-            // Aikana tulee päivä.kuukausi.vuosi
-        } else {
-            
-            // SELECT * FROM `familynet_individuals_v2` WHERE bday BETWEEN '2021-01-01' AND '2022-11-01';
-            $time_query = " $element BETWEEN '".$date_before[2].".".$date_before[1].".".$date_before[0]."' AND '".$date_after[2].".".$date_after[1].".".$date_after[0]."'";
-        }   
-    }
-    
-    return $time_query;
 }
 
 ?>

@@ -163,27 +163,19 @@ button:hover {
 	clear: both;
 }
 
-.column_comet
-{
-	border: 3px solid #f1f1f1;
-	float: left;
-	width: 14%;
-	padding: 15px;
-}
-
-.column_asteroid 
-{
-	border: 3px solid #f1f1f1;
-	float: left;
-	width: 12%;
-	padding: 15px;
-}
-
 .column_individual
 {
 	border: 3px solid #f1f1f1;
 	float: left;
 	width: 10%;
+	padding: 15px;
+}
+
+.column_marriage
+{
+	border: 3px solid #f1f1f1;
+	float: left;
+	width: 15%;
 	padding: 15px;
 }
 

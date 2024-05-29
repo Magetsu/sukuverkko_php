@@ -27,7 +27,7 @@ if(isset($_POST["logout_statistics"])) {
 create_html_start("Tilastotietoa");
 
 create_html_header_panel();
-create_html_statistics_upperbanner();
+create_html_statistics_button_panel();
 create_html_statistics_count_panel(get_individual_statistics_count());
 
 if(isset($_POST["time_statistics"])) {

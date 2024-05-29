@@ -72,6 +72,7 @@ if(isset($_POST["erase_tables"])) {
     erase_table(INDIVIDUALS);
     erase_table(SOURCES);
     erase_table(STATISTICS);
+    erase_table(MARRIAGES);
     
     LOGTEXT("Ohjataan <a href=\"main.php\">pääsivulle</a>.");
 
@@ -110,15 +111,119 @@ if(isset($_POST["statistics"])) {
     exit;
 }
 
+/**
+ *  Luodaan tilastotietokanta.
+ */
+if(isset($_POST["create_statistics"])) {
+    
+    LOGTEXT("Luodaan tilastotietokanta.");
+    
+    create_tables(STATISTICS);
+    create_statistics_database(); 
+    
+    LOGTEXT("Ohjataan <a href=\"main.php\">pääsivulle</a>.");
+    
+    if (!GET_LOGGING()) {
+        
+        redirect("main.php");
+    }
+    exit;
+}
+
+/**
+ *  Luodaan avioliittotietokanta.
+ */
+if(isset($_POST["create_marriages"])) {
+    
+    LOGTEXT("Luodaan avioliittotietokanta.");
+    
+    create_tables(MARRIAGES);
+    create_marriages_database();
+    
+    LOGTEXT("Ohjataan <a href=\"main.php\">pääsivulle</a>.");
+    
+    if (!GET_LOGGING()) {
+        
+        redirect("main.php");
+    }
+    exit;
+}
+
+/**
+ *  Haetaan avioliitot.
+ */
+if(isset($_POST["get_marriage"])) {
+    
+    LOGTEXT("Ohjataan <a href=\"search_marriage.php\">avioliittosivulle</a>.");
+       
+    if (!GET_LOGGING())
+        
+        redirect("search_marriage.php");
+        
+        exit;
+}
+
 $_SESSION["individual_count"] = get_individual_count(null);
 $_SESSION["family_count"] = get_family_count(null);
 
 create_html_start("Sukuverkko");
 
 create_html_header_panel();
-create_html_main_upperbanner();
+create_html_main_button_panel();
 create_html_count_panel($_SESSION["individual_count"],$_SESSION["family_count"]);
+create_history();
+create_copyrigth();
 
 create_html_end();
+
+function create_statistics_database() {
+    
+    LOGTEXT("CREATE_STATISTICS_DATABASE : Luodaan statistiikka-tietokanta");
+    
+    for($year = 1700;$year<=date("Y");$year++) {
+        
+        $statistics = array();
+        
+        $birthday_count = get_count_by_year("bday",$year);
+        $deathday_count = get_count_by_year("dday",$year);
+        $marrday_count = get_count_by_year("marday",$year);
+        $infantdeath_count = get_infantdeath_count_by_year($year);
+        array_push($statistics,$birthday_count);
+        array_push($statistics,$deathday_count);
+        array_push($statistics,$marrday_count);
+        array_push($statistics,$infantdeath_count);
+        set_statistics_by_year($year, $statistics);
+    }
+}
+
+function create_marriages_database() {
+    
+    LOGTEXT("CREATE_MARRIAGES_DATABASE : Luodaan avioliitto-tietokanta");
+    
+    // Haetaan lapset families-tietokannasta
+    $children = get_children_count();
+    
+    // Haetaan lasten määrä perheessä tietueesta
+    foreach ($children as $child) {
+        
+        LOGARRAY($child);
+        $child_array = array();
+        $child_count = substr_count($child[0], '¤');
+        array_push($child_array, $child[1]);
+        array_push($child_array, $child_count);
+        set_children_count($child_array);
+        unset($child_array);
+    }
+    
+    // Haetaan puolisoiden tiedot vihkimisineen
+    $marriages = get_marriages();
+    
+    // Haetaan avioliitot tietueesta
+    foreach ($marriages as $marriage) {
+        
+        LOGARRAY($marriage);
+        set_marriage($marriage);
+    }
+}
 
 ?>

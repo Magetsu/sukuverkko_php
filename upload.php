@@ -48,10 +48,13 @@ if(isset($_POST["upload_gedcom_data"])) {
     create_tables(INDIVIDUALS);
     create_tables(SOURCES);
     create_tables(STATISTICS);
+    create_tables(MARRIAGES);
     
     // Parsitaan gedcom-tiedosto
     parse_file($gedcom_data);
-    create_statistics();
+    
+    create_index(INDIVIDUALS);
+    create_index(FAMILIES);
     
     LOGTEXT("<p>Palaa <a href=\"main.php\">pääsivulle</a>.</p>");
     

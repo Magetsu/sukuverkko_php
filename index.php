@@ -26,6 +26,7 @@ if (!$database_exists) {
     create_tables(INDIVIDUALS);
     create_tables(SOURCES);
     create_tables(STATISTICS);
+    create_tables(MARRIAGES);
 }
 
 initialize_search_panels();
@@ -52,12 +53,24 @@ function initialize_search_panels() {
         $_SESSION["buplace"] = '';
         $_SESSION["chrday"] = '';
         $_SESSION["chrplace"] = '';
-        $_SESSION["moveday"] = '';
-        $_SESSION["moveplace"] = '';
+        $_SESSION["move"] = '';
         $_SESSION["individual_name"] = '';
         $_SESSION["individual_constraints_search"] = '';
         $_SESSION["individual_name_search"] = '';
-    }
+        $_SESSION["husbgivn"] = "";
+        $_SESSION["husbsurn"] = "";
+        $_SESSION["husbbday"] = "";
+        $_SESSION["husbbplace"] = "";
+        $_SESSION["husbdday"] = "";
+        $_SESSION["husbdplace"] = "";
+        $_SESSION["wifegivn"] = "";
+        $_SESSION["wifesurn"] = "";
+        $_SESSION["wifebday"] = "";
+        $_SESSION["wifebplace"] = "";
+        $_SESSION["wifedday"] = "";
+        $_SESSION["wifedplace"] = "";
+        $_SESSION["marday"] = "";
+        $_SESSION["marplace"] = "";}
     
 
 ?>
