@@ -112,6 +112,20 @@ if(isset($_POST["statistics"])) {
 }
 
 /**
+ *  Ohjataan lähdesivulle.
+ */
+if(isset($_POST["sources"])) {
+    
+    LOGTEXT("Ohjataan <a href=\"sources.php\">lähdesivulle</a>.");
+    
+    if (!GET_LOGGING()) {
+        
+        redirect("sources.php");
+    }
+    exit;
+}
+
+    /**
  *  Luodaan tilastotietokanta.
  */
 if(isset($_POST["create_statistics"])) {
@@ -163,6 +177,17 @@ if(isset($_POST["get_marriage"])) {
         exit;
 }
 
+if(isset($_POST["return_from_source"])) {
+    
+    LOGTEXT("Ohjataan <a href=\"main.php\">pääsivulle</a>.");
+    
+    if (!GET_LOGGING()) {
+        
+        redirect("main.php");
+    }
+    exit;
+}
+
 $_SESSION["individual_count"] = get_individual_count(null);
 $_SESSION["family_count"] = get_family_count(null);
 
@@ -171,8 +196,9 @@ create_html_start("Sukuverkko");
 create_html_header_panel();
 create_html_main_button_panel();
 create_html_count_panel($_SESSION["individual_count"],$_SESSION["family_count"]);
-create_history();
-create_copyrigth();
+create_html_history();
+create_html_source();
+create_html_copyrigth();
 
 create_html_end();
 
@@ -208,7 +234,7 @@ function create_marriages_database() {
         
         LOGARRAY($child);
         $child_array = array();
-        $child_count = substr_count($child[0], '¤');
+        $child_count = substr_count($child[0], DATA_DELIMITER);
         array_push($child_array, $child[1]);
         array_push($child_array, $child_count);
         set_children_count($child_array);

@@ -4,12 +4,14 @@ require_once("logging.php");
 require_once("html.php");
 require_once("sql.php");
 require_once("create_query.php");
+require_once("create_familycard.php");
 
 session_start();
 
 $query = null;
 $pagenumber = 0;
-
+$sort = '';
+    
 if(isset($_GET["page"]) && ctype_digit($_GET["page"])) {
     
     $pagenumber = $_GET["page"];
@@ -68,7 +70,7 @@ if(isset($_POST["individual_search"])) {
 if(isset($_POST["individual_constraints_search"])) {
    
     $constraintsCount = 0;
-    clear_constraints_fields();
+    clear_individual_constraints_fields();
     
     $_SESSION["individual_name"] = "";
     
@@ -212,6 +214,59 @@ if(isset($_POST["logout_search"])) {
     exit;
 }
 
+/*
+ * Haetaan sodissa kaatuneet
+ */
+if(isset($_POST["kaatuneet"])) {
+
+    LOGTEXT("Haetaan sodissa kaatuneet");
+    
+    $query = " dcause LIKE '%".FALLEN_SOLDIER."%'";
+    $sort = " ORDER BY dday ASC";
+}
+
+/*
+ * Luodaan perhekortti perheestä.
+ */
+ if(isset($_GET["familycard"])) {
+ 
+     $familynumber = $_GET["familycard"];
+ 
+     LOGTEXT("Perhekortti : ".$familynumber);
+ 
+     create_familycard_from_family($familynumber);
+ 
+     exit;
+
+ }
+ 
+ /*
+  * Luodaan perhekortti yksilöstä.
+  */
+ if(isset($_GET["individualcard"])) {
+     
+     $individualnumber = $_GET["individualcard"];
+     
+     LOGTEXT("Henkilökortti : ".$individualnumber);
+     
+     //create_html_start("Perhekortti");
+     create_familycard_from_individual($individualnumber);
+     //create_html_end();
+     
+     exit;
+ }
+ 
+ if(isset($_POST["return_from_card"])) {
+     
+     LOGTEXT("Ohjataan <a href=\"search_individual.php\">hakusivulle</a>.");
+     
+     if (!GET_LOGGING()) {
+         
+         redirect("search_individual.php");
+     }
+     exit;
+ }
+ 
 $limit = intval(RESULTS_IN_PAGE);
 $offset = intval($pagenumber * RESULTS_IN_PAGE);
 
@@ -229,7 +284,7 @@ create_html_individual_search_help_banner();
 
 create_html_search_count_panel($individual_count);
 
-$individuals = get_individual_database($query, $limit, $offset);
+$individuals = get_individual_database($query, $sort, $limit, $offset);
 
 create_html_individual_data_panel($pages, $pagenumber, $individuals);
 
@@ -239,12 +294,12 @@ create_html_end();
  * Haetaan henkilöt tietokannasta
  * 
  */
-function get_individual_database($query, $limit, $offset) {
+function get_individual_database($query, $sort, $limit, $offset) {
     
     LOGTEXT("GET_INDIVIDUAL_DATABASE : Haetaan henkilötietokanta muistiin\n");
             
     // Haetaan henkilöt tietokannasta
-    $individualsql = fetch_individual_database($query, $limit, $offset);
+    $individualsql = fetch_individual_database($query, $sort, $limit, $offset);
    
     // Muokataan tietokannan lähde lyhenne oikeaksi lähteeksi
     foreach ($individualsql as &$individual) {

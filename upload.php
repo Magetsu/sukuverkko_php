@@ -33,7 +33,7 @@ if(isset($_POST["upload_gedcom_data"])) {
         }
     }
     
-    // Tarkistetaan ladattiinko komeettatiedosta.
+    // Tarkistetaan ladattiinko gedcom-tiedosto.
     if(file_exists($gedcom_data) && is_uploaded_file($gedcom_data)) {
         
         LOGTEXT("Filename: " . $_FILES['gedcom_data']['name']);

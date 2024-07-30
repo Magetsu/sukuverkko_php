@@ -143,12 +143,12 @@ function create_index($table_name) {
     switch ($table_name) {
         case FAMILIES:
             
-            $sql = SQL_CREATE_INDEX.$index." ON ".$database.$table_name.SQL_FAMILY_INDEX;
+            $sql = SQL_CREATE_INDEX.$index." ON ".$database.".".$table_name.SQL_FAMILY_INDEX;
             
             break;
         case INDIVIDUALS:
             
-            $sql = SQL_CREATE_INDEX.$index." ON ".$database.$table_name.SQL_INDIVIDUAL_INDEX;
+            $sql = SQL_CREATE_INDEX.$index." ON ".$database.".".$table_name.SQL_INDIVIDUAL_INDEX;
             
             break;
         default:
@@ -172,7 +172,9 @@ function erase_table($table_name) {
 
     $database = DB;
     
-    $sql = SQL_DROP_TABLE.$database.$table_name;
+    $sql = SQL_DROP_TABLE.$database.".".$table_name;
+    
+    LOGTEXT("ERASE_TABLE : Luodaan kysely : ".$sql);
     
     $query = $conn->prepare($sql);
     $query->execute();
@@ -291,7 +293,7 @@ function import_individual_to_database($record) {
     $sql = SQL_INSERT_INTO.$database.".".$table.SQL_INSERT_INDIVIDUAL;
     
     $query = $conn->prepare($sql);
-    $query->execute([$record[0],$record[1],$record[2],$record[3],$record[4],$record[5],$record[6],$record[7],$record[8],$record[9],$record[10],$record[11],$record[12],$record[13],$record[14],$record[15],$record[16],$record[17]]);
+    $query->execute([$record[0],$record[1],$record[2],$record[3],$record[4],$record[5],$record[6],$record[7],$record[8],$record[9],$record[10],$record[11],$record[12],$record[13],$record[14],$record[15],$record[16],$record[17],$record[18],$record[19]]);
 }
 
 //
@@ -333,26 +335,26 @@ function import_source_to_database($record) {
 //
 // Hakee tietokannasta henkilöt
 //
-function fetch_individual_database($query, $limit, $offset) {
+function fetch_individual_database($query, $sort, $limit, $offset) {
     
     LOGTEXT("FETCH_INDIVIDUAL_DATABASE : Haetaan henkilötietokantatiedot : ".$offset." - ".$offset+$limit);
-    
+        
     $connect = connect_to_database();
     
     $database = DB;
     $table = INDIVIDUALS;
-    
+        
     if(!isset($_SESSION["user_id"])) {
         
         LOGTEXT("FETCH_INDIVIDUAL_DATABASE : Haetaan vain kuolleiden henkilötietokantatiedot (Ei olla kirjauduttu sisälle).");
         
         if ($query) {
             
-            $sql = SQL_SELECT_FROM."$database.$table WHERE isdead='1' AND ($query) LIMIT $limit OFFSET $offset";
+            $sql = SQL_SELECT_FROM.$database.".".$table." WHERE isdead='1' AND ($query) $sort LIMIT $limit OFFSET $offset";
             
         } else {
             
-            $sql = SQL_SELECT_FROM."$database.$table WHERE isdead='1' LIMIT $limit OFFSET $offset";
+            $sql = SQL_SELECT_FROM.$database.".".$table." WHERE isdead='1' LIMIT $limit OFFSET $offset";
             
         }
     } else if(isset($_SESSION["user_id"])) {
@@ -361,11 +363,11 @@ function fetch_individual_database($query, $limit, $offset) {
         
         if ($query) {
             
-            $sql = SQL_SELECT_FROM."$database.$table WHERE $query LIMIT $limit OFFSET $offset";
+            $sql = SQL_SELECT_FROM.$database.".".$table." WHERE $query $sort LIMIT $limit OFFSET $offset";
             
         } else {
             
-            $sql = SQL_SELECT_FROM."$database.$table LIMIT $limit OFFSET $offset";
+            $sql = SQL_SELECT_FROM.$database.".".$table." LIMIT $limit OFFSET $offset";
             
         }
     }
@@ -558,7 +560,7 @@ function get_marriages() {
     //$index_family = "index_".$family_table;
     //$index_individual = "index_".$individual_table;
     
-    // Tämä SQL-koodi vaikuttaa liian raskaalta minun tietokannan koolla ~200000 tietuetta
+    // Tämä SQL-koodi on raskas ~200000 tietuetta
     $sql = "SELECT f.xref, hi.givn, hi.surn, hi.bday, hi.bplace, hi.dday, hi.dplace, hi.isdead, wi.givn, wi.surn, wi.bday, wi.bplace, wi.dday, wi.dplace, wi.isdead, f.marday, f.marplace ";
     $sql .= "FROM $database.$family_table f ";
     $sql .= "LEFT JOIN $database.$individual_table hi ON hi.xref = husb ";
@@ -673,6 +675,104 @@ function fetch_marriage_database($query, $limit, $offset) {
     $array = $query->fetchAll();
     
     return $array;
+}
+
+//
+// Hakee tietokannasta perhekortin
+//
+function fetch_familycard($card_id) {
+    
+    LOGTEXT("FETCH_FAMILYCARD : Haetaan perhekortti yksilölle : ".$card_id);
+    
+    $connect = connect_to_database();
+    
+    $database = DB;
+    $table = FAMILIES;
+    
+    $sql = SQL_SELECT_FROM."$database.$table WHERE husb='".$card_id."' OR wife='".$card_id."'";
+    
+    LOGTEXT("FETCH_FAMILYCARD : Kysely on : ".$sql);
+    
+    $query = $connect->prepare($sql);
+    $query->execute();
+    $array = $query->fetchAll();
+   
+    //LOGARRAY($array);
+    
+    return $array;
+}
+
+function fetch_individual($individual_number) {
+    
+    LOGTEXT("FETCH_INDIVIDUAL : Haetaan yksilökortti : ".$individual_number);
+    
+    $connect = connect_to_database();
+    
+    $database = DB;
+    $table = INDIVIDUALS;
+    
+    if(!isset($_SESSION["user_id"])) {
+        
+        $sql = SQL_SELECT_FROM."$database.$table WHERE xref='".$individual_number."' AND isdead='1'";
+
+    } else if(isset($_SESSION["user_id"])) {
+        
+        $sql = SQL_SELECT_FROM."$database.$table WHERE xref='".$individual_number."'";
+    }
+    
+    LOGTEXT("FETCH_INDIVIDUAL : Kysely on : ".$sql);
+    
+    $query = $connect->prepare($sql);
+    $query->execute();
+    $array = $query->fetchAll();
+    
+    LOGARRAY($array);
+    
+    return $array;
+}
+
+function get_familycard($sibling) {
+
+    LOGTEXT("GET_FAMILYCARD : Haetaan vanhemmat kortille : ".$sibling);
+ 
+    $connect = connect_to_database();
+    
+    $database = DB;
+    $table = FAMILIES;
+        
+    $sql = SQL_SELECT_FROM."$database.$table WHERE xref='".$sibling."'";
+    
+    LOGTEXT("FETCH_FAMILYCARD : Kysely on : ".$sql);
+    
+    $query = $connect->prepare($sql);
+    $query->execute();
+    $array = $query->fetchAll();
+    
+    LOGARRAY($array);
+    
+    return $array;
+}
+
+function get_family($fams) {
+      
+    LOGTEXT("GET_FAMILY : Tarkistetaan onko vanhemmat kuolleet - Perhe ".$fams);
+
+    $connect = connect_to_database();
+    
+    $database = DB;
+    $table = MARRIAGES;
+    
+    $sql = SQL_SELECT_FROM."$database.$table WHERE xref='".$fams."'";
+
+    LOGTEXT("FETCH_FAMILYCARD : Kysely on : ".$sql);
+
+    $query = $connect->prepare($sql);
+    $query->execute();
+    $array = $query->fetchAll();
+    
+    LOGARRAY($array);
+    
+    return $array;   
 }
 
 ?>

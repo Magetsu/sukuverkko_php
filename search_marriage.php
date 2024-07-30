@@ -4,6 +4,7 @@ require_once("logging.php");
 require_once("html.php");
 require_once("sql.php");
 require_once("create_query.php");
+//require_once("create_familycard.php");
 
 session_start();
 
@@ -14,9 +15,24 @@ if(isset($_GET["page"]) && ctype_digit($_GET["page"])) {
     
     $pagenumber = $_GET["page"];
     
-    $query = $_SESSION["marriage_constraints_query"];
 }
 
+/*
+ * Luodaan perhekortti.
+ */
+/*
+if(isset($_GET["familycard"])) {
+
+    $familynumber = $_GET["familycard"];
+    
+    LOGTEXT("Perhekortti : ".$familynumber);
+    
+    compose_familycard($familynumber);  
+    
+    exit;
+    
+}
+*/
 /*
  * Haetaan rajoitushaulla.
  */
@@ -158,9 +174,7 @@ if(isset($_POST["marriage_search"])) {
         
         $_SESSION["marday"] = $_POST["marday"];
     }
-    
-    $_SESSION["marriage_constraints_query"] = $query;
-    
+        
     LOGTEXT("Hakulauseke on : ".$query);
 }
     

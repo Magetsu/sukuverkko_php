@@ -4,21 +4,27 @@ define("HOST", "mysql:host=db1.n.kapsi.fi;dbname=magetsu");
 define("USERNAME", "magetsu");
 define("PASSWORD", "FgQiYWtkRX");
 define("DB", "magetsu");
+define("DATA_DELIMITER", "¤");
+define("MOVEDAY_FAMILYCARD","move_family_card");
+define("MOVEDAY_INDIVIDUAL","move_individual");
+define("FALLEN_SOLDIER","Kaatui sodassa");
 
 // Tuotantotietokanta
-/*
+
 define("FAMILIES", "familynet_families");
 define("INDIVIDUALS", "familynet_individuals");
 define("SOURCES", "familynet_sources");
 define("STATISTICS", "familynet_statistics");
 define("MARRIAGES", "familynet_marriages");
-*/
+
 //  Testaustietokanta
+/*
 define("FAMILIES", "familynet_families_v2");
 define("INDIVIDUALS", "familynet_individuals_v2");
 define("SOURCES", "familynet_sources_v2");
 define("STATISTICS", "familynet_statistics_v2");
 define("MARRIAGES", "familynet_marriages_v2");
+*/
 
 define ("RESULTS_IN_PAGE", 1000);
 
@@ -32,7 +38,7 @@ define("SQL_SELECT_FROM","SELECT * FROM ");
 
 // INSERT-komennot
 define("SQL_INSERT_INTO","INSERT INTO ");
-define("SQL_INSERT_INDIVIDUAL"," (xref,givn,surn,sex,occu,bday,bplace,dday,dplace,dcause,buday,buplace,chrday,chrplace,note,move,isdead,source) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+define("SQL_INSERT_INDIVIDUAL"," (xref,givn,surn,sex,occu,bday,bplace,dday,dplace,dcause,buday,buplace,chrday,chrplace,note,move,isdead,source,famc, fams) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 define("SQL_INSERT_FAMILY"," (xref,husb,wife,marday,marplace,child) values ( ?, ?, ?, ?, ?, ?)");
 define("SQL_INSERT_SOURCE"," (xref,name) values ( ?, ?)");
 
@@ -67,7 +73,9 @@ define("SQL_INDIVIDUAL_TABLE"," ( xref VARCHAR(10),
                 				  note VARCHAR(10000),
                 				  move VARCHAR(100),
                 				  isdead INT(1),
-                				  source VARCHAR(100) )");
+                				  source VARCHAR(100),
+                                  famc VARCHAR(10),
+                                  fams VARCHAR(100))");
 
 define("SQL_SOURCE_TABLE"," ( xref VARCHAR(10), name VARCHAR(100) )");
 

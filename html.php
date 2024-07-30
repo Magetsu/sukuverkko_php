@@ -1,6 +1,6 @@
 <?php
 
-require_once("convert_day.php");
+require_once("modify_records.php");
 
 //
 // Tulostaa HTML-sivun alkuosan valitun otsikon kanssa.
@@ -133,7 +133,7 @@ function create_html_individual_search_help_banner() {
 function create_html_individual_search_button_panel() {
     
     echo "<form action=\"search_individual.php\" method=\"post\">\n";
-    echo " <input type=\"submit\" name=\"d\" value=\"D\">\n";
+    echo " <input type=\"submit\" name=\"kaatuneet\" value=\"Sodissa kaatuneet\">\n";
     echo " <input type=\"submit\" name=\"e\" value=\"E\">\n";
     echo " <input type=\"submit\" name=\"f\" value=\"F\">\n";
     echo " <input type=\"submit\" name=\"logout_search\" value=\"Palaa takaisin\">\n";
@@ -143,15 +143,27 @@ function create_html_individual_search_button_panel() {
 //
 // Tulostaa historiapaneelin
 //
-function create_history() {
+function create_html_history() {
     
+    echo "24.6.2024 Lisättiin perhekortit.<br><br>\n";
     echo "5.5.2024 Lisättiin haku avioliiton mukaan<br><br>\n";
+}
+
+//
+// Tulostaa käytetyt lähteet
+//
+function create_html_source() {
+    
+    echo "<form action=\"main.php\" method=\"post\">\n";
+    echo " <input type=\"submit\" name=\"sources\" value=\"Lähdeluettelo\">\n";
+    echo "</form>\n";
+    
 }
 
 //
 // Tulostaa copyrightpaneelin
 //
-function create_copyrigth() {
+function create_html_copyrigth() {
     
     echo "(c) 2024 Marko Alaluusua<br>\n";
 }
@@ -261,8 +273,6 @@ function create_html_individual_data_panel($pages, $pagenumber, $array) {
     echo "      <td>Ristiäispäivä</td>\n";
     echo "      <td>Ristiäispaikka</td>\n";
     echo "      <td>Muutto</td>\n";
-    echo "      <td>Lähde</td>\n";
-    echo "      <td>Muistiinpano</td>\n";
     echo "  </tr>\n";
     
     foreach ($array as $individual) {
@@ -280,9 +290,8 @@ function create_html_individual_data_panel($pages, $pagenumber, $array) {
         echo "          <td>".$individual['buplace']."</td>\n";
         echo "          <td>".modify_record_date_to_day($individual['chrday'])."</td>\n";
         echo "          <td>".$individual['chrplace']."</td>\n";
-        echo "          <td>".$individual['move']."</td>\n";
-        echo "          <td>".$individual['source']."</td>\n";
-        echo "          <td>".$individual['note']."</td>\n";
+        echo "          <td>".modify_move(MOVEDAY_INDIVIDUAL,$individual['move'])."</td>\n";
+        echo "          <td><div class=\"familycard\" id=\"individualcard\"><a href=\"search_individual.php?individualcard=".$individual['xref']."\">Perhekortti</a></div></td>\n";
         echo "  </tr>\n";
     }
     
@@ -481,6 +490,39 @@ function create_html_marriage_data_panel($pages, $pagenumber, $array) {
     }
     
     echo "</table>\n";
+}
+
+//
+// Tulostaa perhekortin
+//
+function create_html_family_card($family_array) {
+ 
+    echo "<br><table border=1><tr><th colspan='4'>Perhekortti</th></tr>\n";
+    echo "<tr><td colspan='2'>".$family_array['father_line']."</td><td colspan='2'>".$family_array['mother_line']."</td></tr>\n";
+    echo "<tr><td colspan='4' align='center'>".$family_array['marriage_line']."</td></tr>\n";
+    echo "<tr><td colspan='4'>".$family_array['children_line']."</td></tr>\n";
+    echo "</table>";
+    
+    if ($family_array['father_source'] OR $family_array['mother_source']) {
+        
+        echo "<br><table border=1><th><b>Miehen lähteet:</b></th><th><b>Vaimon lähteet:</b></th><tr>\n";
+        echo "<td>".$family_array['father_source']."</td>\n";
+        echo "<td>".$family_array['mother_source']."</td>\n";
+        echo "</tr></table>";
+    }
+    
+    if ($family_array['father_history_line'] OR $family_array['mother_history_line']) {
+        
+        echo "<br><table border=1><th><b>Miehen asutushistoria:</b></th><th><b>Vaimon asutushistoria:</b></th><tr>\n";
+        echo "<td>".$family_array['father_history_line']."</td>\n";
+        echo "<td>".$family_array['mother_history_line']."</td>\n";
+        echo "</tr></table>";
+    }
+    
+    echo "<form action=\"search_individual.php\" method=\"post\">\n";
+    echo " <input type=\"submit\" name=\"return_from_card\" value=\"Palaa takaisin\">\n";
+    echo "</form>\n";
+    
 }
 
 ?>

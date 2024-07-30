@@ -208,8 +208,6 @@ function clear_marriage_constraints_fields() {
     $_SESSION["wifedplace"] = "";
     $_SESSION["marday"] = "";
     $_SESSION["marplace"] = "";
-
-    $_SESSION["marriage_constraints_query"] = false;
 }
 
 ?>

@@ -6,7 +6,7 @@ ini_set("display_errors", 1);
 
 require_once("logging.php");
 require_once("sql.php");
-require_once("convert_day.php");
+require_once("modify_records.php");
 
 function parse_file($gedcom) {
       
@@ -86,6 +86,8 @@ function import_record_to_database($gedcom_record) {
     $matches = '';
     $dcausearray = '';
     $children = '';
+    $famc = '';
+    $famsdata = '';
     
     //LOGTEXT("   IMPORT_RECORD : Käydään läpi tietuetta : ".$gedcom_record);
     
@@ -132,12 +134,29 @@ function import_record_to_database($gedcom_record) {
                 $occu=trim($match[1]); 
             }
             
+            // Etsitään tietueesta perhe jossa henkilö on lapsena
+            if (preg_match('/\n1 FAMC @(.+)@/u', $gedcom_record, $match)) {
+                
+                $famc=trim($match[1]);
+            }
+            
+            // Etsitään tietueesta perhe jossa henkilö on vanhempana
+            if (preg_match_all('/\n1 FAMS @([A-Za-z0-9:_-]+)@*/u', $gedcom_record, $matches, PREG_SET_ORDER)) {
+                
+                LOGARRAY($matches);
+                
+                foreach($matches as $match) {
+                    
+                    $famsdata .= trim($match[1]).DATA_DELIMITER;
+                }
+            }
+            
             // Etsitään tietueesta lähteet
             if (preg_match_all('/\n1 SOUR @([A-Za-z0-9:_-]+)@*/', $gedcom_record, $sources, PREG_SET_ORDER)) {
                 
                 foreach($sources as $source) {
                     
-                    $sourcedata .= trim($source[1])."¤";
+                    $sourcedata .= trim($source[1]).DATA_DELIMITER;
                 }
             }   
             
@@ -193,11 +212,13 @@ function import_record_to_database($gedcom_record) {
                         
                         if(preg_match_all("/\n2 TYPE (\w+).*(?:\n2 DATE (.+))*(?:\n2 PLAC (.+))/", $match[0], $moves, PREG_SET_ORDER)) {
                                                      
+                            LOGARRAY($moves);
+                            
                             // Etsitään tietueesta muuttopäivät ja -paikat
                             foreach($moves as $move) {
                             
                             $moveday = modify_move_date($move[2]);
-                            $movedata .= $moveday." ".trim($move[3])."<br>";
+                            $movedata .= $moveday." ".trim($move[3]).DATA_DELIMITER;
                             }
                         }
                     }
@@ -205,7 +226,7 @@ function import_record_to_database($gedcom_record) {
             }
            
             $individual_record = array();
-            array_push($individual_record, $xref, $givn, $surn, $sex, $occu, $bday, $bplace, $dday, $dplace, $dcause, $buday, $buplace, $chrday, $chrplace, $note, $movedata, $isdead, $sourcedata);
+            array_push($individual_record, $xref, $givn, $surn, $sex, $occu, $bday, $bplace, $dday, $dplace, $dcause, $buday, $buplace, $chrday, $chrplace, $note, $movedata, $isdead, $sourcedata, $famc, $famsdata);
             
             display_individual_card($individual_record);
             import_individual_to_database($individual_record);
@@ -273,50 +294,6 @@ function import_record_to_database($gedcom_record) {
     }    
 }
 
-function modify_move_date($datestring) {
-        
-    LOGTEXT("MODIFY_MOVE_DATE : Muokataan päivämäärää : ".$datestring);
-    
-    $date = '';
-    $dateelementsarray = '';
-    
-    if ($datestring = '')
-        return $date;
-        
-    if (preg_match('/^(\d*) ([A-Z]*) ([0-9]{4})/', $datestring, $dateelementsarray)) {
-        
-        list(,$day,$month,$year) = $dateelementsarray;
-        
-        $month = date('m',strtotime($month));
-        
-        $date = $day.".".$month.".".$year;        
-        
-    } else {
-                
-        $day = "0";
-        $month = "0";
-        
-        $date = $datestring;
-    }
-    return $date;
-}
-
-function modify_record_place($placestring) {
-    
-    LOGTEXT("MODIFY_RECORD_PLACE : Muokataan paikkaa : ".$placestring);
-    
-    $place = '';
-    $placearray = '';
-    
-    if (preg_match('/\n1 (?:\w+).*(?:\n[2-9].*)*(?:\n2 PLAC (.+))/u', $placestring, $placearray)) {
-        
-        list(,$place) = $placearray;
-        $place = trim($place);
-    }
-    
-    return $place;
-}
-
 function display_individual_card($individual_record) {
 
     LOGTEXT("IMPORT_RECORD : xref    : ".$individual_record[0]);
@@ -333,12 +310,14 @@ function display_individual_card($individual_record) {
     LOGTEXT("IMPORT_RECORD : Hautauspaikka : ".$individual_record[11]);
     LOGTEXT("IMPORT_RECORD : Kastepäivä : ".$individual_record[12]);
     LOGTEXT("IMPORT_RECORD : Kastepaikka : ".$individual_record[13]);
-    LOGTEXT("IMPORT_RECORD : Muutot : ".$individual_record[14]);
-    LOGTEXT("IMPORT_RECORD : Huomio : ".$individual_record[15]);
-    LOGTEXT("IMPORT_RECORD : Lähteet : ".$individual_record[16]);
-    LOGTEXT("IMPORT_RECORD : Kuollut? : ".$individual_record[17]);
+    LOGTEXT("IMPORT_RECORD : Huomio : ".$individual_record[14]);
+    LOGTEXT("IMPORT_RECORD : Muutot : ".$individual_record[15]);
+    LOGTEXT("IMPORT_RECORD : Kuollut? : ".$individual_record[16]);
+    LOGTEXT("IMPORT_RECORD : Lähteet : ".$individual_record[17]);
+    LOGTEXT("IMPORT_RECORD : Perhe lapsena : ".$individual_record[18]);
+    LOGTEXT("IMPORT_RECORD : Perhe vanhempana : ".$individual_record[19]);
     
-    LOGTEXT("INSERT INTO magetsu.familynet_individuals (xref, givn, surn, sex, occu, bday, bplace, dday, dplace, dcause, buday, buplace, chrday, chrplace, note, move, isdead, source) values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    LOGTEXT("INSERT INTO magetsu.familynet_individuals (xref, givn, surn, sex, occu, bday, bplace, dday, dplace, dcause, buday, buplace, chrday, chrplace, note, move, isdead, source, famc, fams )");
     LOGTEXT("----------------------------------------------------------------------------------------------------------------------------------------------");
 }
 

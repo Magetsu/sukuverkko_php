@@ -1,6 +1,6 @@
 <?php
 
-define ("LOGGING", true);
+define ("LOGGING", false);
 
 function LOGTEXT($prompt) {
     
